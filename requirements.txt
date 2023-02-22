@@ -4,7 +4,8 @@ onnxsim
 opencv-python
 torch
 torchvision
-ultralytics
+ultralytics==8.0.5
+#ultralytics
 # tensorrt
 # cuda-python
 # pycuda

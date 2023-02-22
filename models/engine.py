@@ -331,13 +331,14 @@ class TRTProfilerV1(trt.IProfiler):
         self.total_runtime += ms * 1000
         self.recorder[layer_name] += ms * 1000
 
-    def report(self):
-        f = '\t%40s\t\t\t\t%10.4f'
-        print('\t%40s\t\t\t\t%10s' % ('layername', 'cost(us)'))
-        for name, cost in sorted(self.recorder.items(), key=lambda x: -x[1]):
-            print(
-                f %
-                (name if len(name) < 40 else name[:35] + ' ' + '*' * 4, cost))
+    def report(self, report_all=False):
+        if report_all:
+            f = '\t%40s\t\t\t\t%10.4f'
+            print('\t%40s\t\t\t\t%10s' % ('layername', 'cost(us)'))
+            for name, cost in sorted(self.recorder.items(), key=lambda x: -x[1]):
+                print(
+                    f %
+                    (name if len(name) < 40 else name[:35] + ' ' + '*' * 4, cost))    
         print(f'\nTotal Inference Time: {self.total_runtime:.4f}(us)')
 
 
