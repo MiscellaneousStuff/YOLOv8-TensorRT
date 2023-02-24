@@ -34,8 +34,24 @@ def seg_postprocess(
 
 
 def det_postprocess(data: Tuple[Tensor, Tensor, Tensor, Tensor]):
+    print(
+        "det_postprocess->len(data) + data shapes:",
+        len(data),
+        [data[i].shape for i in range(4)])
     assert len(data) == 4
     num_dets, bboxes, scores, labels = (i[0] for i in data)
+    nums = num_dets.item()
+    print("det_postprocess->len(data)->nums:", nums)
+    bboxes = bboxes[:nums]
+    scores = scores[:nums]
+    labels = labels[:nums]
+    return bboxes, scores, labels
+
+
+def det_postprocess_para(data: Tuple[Tensor, Tensor, Tensor, Tensor]):
+    assert len(data) == 4
+    # num_dets, bboxes, scores, labels = (i[0] for i in data)
+    num_dets, bboxes, scores, labels = data[0], data[1], data[2], data[3]
     nums = num_dets.item()
     bboxes = bboxes[:nums]
     scores = scores[:nums]

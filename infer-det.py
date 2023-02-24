@@ -17,46 +17,46 @@ def main(args: argparse.Namespace) -> None:
     profiler = TRTProfilerV1()
     Engine = TRTModule(args.engine, device)
     Engine.set_profiler(profiler)
-    # H, W = Engine.inp_info[0].shape[-2:]
+    H, W = Engine.inp_info[0].shape[-2:]
 
     # set desired output names order
     Engine.set_desired(['num_dets', 'bboxes', 'scores', 'labels'])
 
-    """
-    images = path_to_list(args.imgs)
     save_path = Path(args.out_dir)
-
+    
     if not args.show and not save_path.exists():
         save_path.mkdir(parents=True, exist_ok=True)
-    """
-
+    
     images = LoadImages(args.source,
                         imgsz=640,
                         stride=32,
                         auto=True,
                         transforms=None,
                         vid_stride=1)
+    
     frame_count = 0
     for image in images:
         frame_count += 1
-        source, im, im0, _, _ = image
-        # print(">>> image", image)
-        """
-        save_image = save_path / image.name
-        """
-        #bgr = cv2.imread(str(image))
-        # draw = bgr.copy()
-        #bgr, ratio, dwdh = letterbox(bgr, (W, H))
-        #rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
-        #tensor = blob(rgb, return_seg=False)
-        #dwdh = torch.asarray(dwdh * 2, dtype=torch.float32, device=device)
-        tensor = torch.asarray(im, device=device)
+        source, _, im0, _, _ = image
+        
+        save_image = save_path / (source.split(".")[0] + str(frame_count+1) + ".jpg")
+        print("save image:", save_image)
+        
+        bgr = cv2.cvtColor(im0, cv2.COLOR_RGB2BGR)
+        draw = bgr.copy()
+        bgr, ratio, dwdh = letterbox(bgr, (W, H))
+        rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
+        tensor = blob(rgb, return_seg=False)
+        dwdh = torch.asarray(dwdh * 2, dtype=torch.float32, device=device)
+        tensor = torch.asarray(tensor, device=device)
+
+        print("SHAPE TO INFER:", frame_count+1, tensor.shape)
         # inference
         data = Engine(tensor)
 
         bboxes, scores, labels = det_postprocess(data)
-        #bboxes -= dwdh
-        #bboxes /= ratio
+        bboxes -= dwdh
+        bboxes /= ratio
 
         for (bbox, score, label) in zip(bboxes, scores, labels):
             bbox = bbox.round().int().tolist()
@@ -76,6 +76,7 @@ def main(args: argparse.Namespace) -> None:
                         0.75, [225, 255, 255],
                         thickness=2)
             """
+        
         """
         if args.show:
             cv2.imshow('result', draw)
@@ -84,7 +85,6 @@ def main(args: argparse.Namespace) -> None:
             cv2.imwrite(str(save_image), draw)
         """
 
-    print("Total Frames:", frame_count)
     Engine.context.profiler.report()
 
 def parse_args() -> argparse.Namespace:
